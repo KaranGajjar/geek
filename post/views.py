@@ -1,67 +1,84 @@
-from django.shortcuts import render
+from django.contrib import auth
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView, CreateAPIView
+from rest_framework.response import Response
 
 from .models import *
 from .serializer import *
 # Create your views here.
 
-class ListUser(ListAPIView):
+def login(request):
+    if request.method == "POST":
+        username = request.POST.get('un')
+        password = request.POST.get('pw')
+        user = auth.authenticate(username = username,password=password)
+        if user is not None:
+            auth.login(request,user)
+            return redirect(UserPost)
+        else:
+            return render(request,'login.html')
+    return render(request, 'login.html')
+
+
+@api_view(['GET','POST'])
+def ListUser(request):
     queryset = User.objects.all()
-    serializer_class = UserSs
+    serializer = UserSs(queryset, many=True)
+    return Response(serializer.data)
 
 
-class DisplayUser(RetrieveAPIView):
+@api_view(['GET','POST'])
+def DisplayUser(request):
     queryset = User.objects.all()
-    serializer_class = UserSs
-    lookup_field = 'id'
+    serializer = UserSs(queryset, many=True)
+    return Response(serializer.data)
 
-class ListUserDetails(ListAPIView):
+@api_view(['GET','POST'])
+def ListUserDetails(request):
     queryset = UserDetails.objects.all()
-    serializer_class = UserDetailsSs
+    serializer = UserDetailsSs(queryset, many=True)
+    return Response(serializer.data)
 
 
-class DisplayUserDetails(RetrieveAPIView):
+@api_view(['GET','POST'])
+def DisplayUserDetails(request):
     queryset = UserDetails.objects.all()
-    serializer_class = UserDetailsSs
-    lookup_field = 'id'
+    serializer = UserDetailsSs(queryset, many=True)
+    return Response(serializer.data)
 
-class ListPost(ListAPIView):
+@api_view(['GET','POST'])
+def ListPosts(request):
     queryset = PostDetails.objects.all()
-    serializer_class = PostDetailsSs
+    serializer = PostDetailsSs(queryset, many=True)
+    return Response(serializer.data)
 
 
-class DisplayPost(RetrieveAPIView):
+@api_view(['GET','POST'])
+def DisplayPosts(request):
     queryset = PostDetails.objects.all()
-    serializer_class = PostDetailsSs
-    lookup_field = 'id'
-
-class ListCategories(ListAPIView):
+    serializer = PostDetailsSs(queryset, many=True)
+    return Response(serializer.data)
+@api_view(['GET','POST'])
+def ListCategories(request):
     queryset = Categories.objects.all()
-    serializer_class = CategoriesSs
+    serializer = CategoriesSs(queryset, many=True)
+    return Response(serializer.data)
 
-
-class DisplayCategories(RetrieveAPIView):
+@api_view(['GET','POST'])
+def DisplayCategories(request):
     queryset = Categories.objects.all()
-    serializer_class = CategoriesSs
-    lookup_field = 'id'
+    serializer = CategoriesSs(queryset, many=True)
+    return Response(serializer.data)
 
-class UserPost(ListAPIView):
-    data = User.objects.filter(username = "harsh")
-    user_id = data.values()[0]['id']
-    queryset = PostDetails.objects.filter(user_id = user_id)
-    serializer_class = PostDetailsSs
-# class Update(UpdateAPIView):
-#     queryset = UserDetails.objects.all()
-#     serializer_class = UserDetailsSs
-#     lookup_field = 'first_name'
-#
-# class Delete(DestroyAPIView):
-#     queryset = UserDetails.objects.all()
-#     serializer_class = UserDetailsSs
-#     lookup_field = 'first_name'
-#
-# class Create(CreateAPIView):
-#     queryset = UserDetails.objects.all()
-#     serializer_class = UserCreateSerializer
+@api_view(['GET','POST'])
+def UserPost(request):
+    if request.user.is_authenticated():
+        user_id = request.user.id
+        queryset = PostDetails.objects.filter(user_id = user_id)
+        serializer = PostDetailsSs(queryset, many=True)
+        return Response(serializer.data)
+    else:
+        return redirect(login)
 
